@@ -1,64 +1,82 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const app = express();
-const http = require('http');
-const { Server } = require('socket.io');
+// LOGIN BUTTON
+document.getElementById('loginBtn')?.addEventListener('click', async () => {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
 
-const server = http.createServer(app);
-const io = new Server(server);
-
-const usersFile = path.join(__dirname, 'users.json');
-
-app.use(express.static('public'));
-app.use(express.json());
-
-// SIGNUP route
-app.post('/signup', (req, res) => {
-  const { username, password } = req.body;
-  let users = {};
+  if (!username || !password) return alert("Please enter username and password");
 
   try {
-    users = JSON.parse(fs.readFileSync(usersFile, 'utf8') || '{}');
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const text = await res.text();
+    const data = JSON.parse(text || '{}');
+
+    if (data.success) {
+      localStorage.setItem('username', username);
+      window.location.href = 'chat.html';
+    } else {
+      alert(data.message || 'Login failed');
+    }
   } catch (err) {
-    console.error('Error reading users file:', err);
-  }
-
-  if (users[username]) {
-    return res.json({ success: false, message: 'Username already exists' });
-  }
-
-  users[username] = { password };
-  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
-  res.json({ success: true });
-});
-
-// LOGIN route
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  let users = {};
-
-  try {
-    users = JSON.parse(fs.readFileSync(usersFile, 'utf8') || '{}');
-  } catch (err) {
-    console.error('Error reading users file:', err);
-  }
-
-  if (users[username] && users[username].password === password) {
-    return res.json({ success: true });
-  } else {
-    return res.json({ success: false, message: 'Invalid credentials' });
+    console.error('Login error:', err);
+    alert('Server error. Try again later.');
   }
 });
 
-// Chat socket
-io.on('connection', (socket) => {
-  socket.on('chat message', (msg) => {
-    io.emit('chat message', msg);
+// SIGNUP BUTTON
+document.getElementById('signupBtn')?.addEventListener('click', async () => {
+  const username = document.getElementById('signupUsername').value.trim();
+  const password = document.getElementById('signupPassword').value.trim();
+
+  if (!username || !password) return alert("Please enter username and password");
+
+  try {
+    const res = await fetch('/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const text = await res.text();
+    const data = JSON.parse(text || '{}');
+
+    if (data.success) {
+      alert('Signup successful! Please login.');
+      window.location.href = 'index.html'; // or login.html
+    } else {
+      alert(data.message || 'Signup failed');
+    }
+  } catch (err) {
+    console.error('Signup error:', err);
+    alert('Server error. Try again later.');
+  }
+});
+
+// SOCKET CHAT LOGIC (chat.html only)
+if (window.location.pathname.endsWith('chat.html')) {
+  const socket = io();
+  const form = document.getElementById('form');
+  const input = document.getElementById('input');
+  const messages = document.getElementById('messages');
+  const username = localStorage.getItem('username') || 'Anonymous';
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (input.value) {
+      socket.emit('chat message', `${username}: ${input.value}`);
+      input.value = '';
+    }
   });
-});
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+  socket.on('chat message', function (msg) {
+    const item = document.createElement('li');
+    item.textContent = msg;
+    messages.appendChild(item);
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+}
+
