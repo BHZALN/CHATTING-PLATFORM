@@ -1,4 +1,4 @@
-const BACKEND_URL = 'https://chatting-platformee.onrender.com/index.html'; // <-- CHANGE THIS
+const BACKEND_URL = 'https://chatting-platformee.onrender.com'; // ✅ FIXED
 
 // ===== LOGIN =====
 document.getElementById('loginBtn')?.addEventListener('click', async () => {
@@ -8,7 +8,7 @@ document.getElementById('loginBtn')?.addEventListener('click', async () => {
   if (!username || !password) return alert("Please enter username and password");
 
   try {
-    const res = await fetch('/login', {
+    const res = await fetch(`${BACKEND_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
@@ -50,7 +50,7 @@ document.getElementById('signupBtn')?.addEventListener('click', async () => {
 
     if (data.success) {
       alert('Signup successful. Please login.');
-      window.location.href = 'index.html'; // back to login page
+      window.location.href = 'index.html';
     } else {
       alert(data.message || 'Signup failed');
     }
@@ -84,4 +84,3 @@ if (window.location.pathname.endsWith('chat.html')) {
     window.scrollTo(0, document.body.scrollHeight);
   });
 }
-
