@@ -9,12 +9,16 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// ✅ Enable CORS for your frontend domain
+// CORS SETUP
 app.use(cors({
   origin: 'https://xischat-io-vuew.onrender.com',
   methods: ['GET', 'POST'],
   credentials: true
 }));
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+
 
 // Location of users.json
 const usersFile = path.join(__dirname, 'users.json');
