@@ -49,25 +49,21 @@ app.post('/signup', (req, res) => {
 // --- LOGIN ---
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-
-  if (!username || !password)
-    return res.status(400).json({ success: false, message: "Missing credentials" });
-
   let users = {};
+
   try {
-    if (fs.existsSync(usersFile)) {
-      users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
-    }
+    users = JSON.parse(fs.readFileSync(usersFile, 'utf8') || '{}');
   } catch (err) {
     console.error('Error reading users file:', err);
   }
 
   if (users[username] && users[username].password === password) {
-    res.json({ success: true });
+    return res.json({ success: true });
   } else {
-    res.json({ success: false, message: 'Invalid username or password' });
+    return res.json({ success: false, message: 'Invalid credentials' });
   }
 });
+
 
 // --- SOCKET.IO CHAT ---
 io.on('connection', (socket) => {

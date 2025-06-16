@@ -5,12 +5,10 @@ document.getElementById('loginBtn')?.addEventListener('click', async () => {
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
 
-  if (!username || !password) {
-    return alert("Please enter both username and password.");
-  }
+  if (!username || !password) return alert("Please enter username and password");
 
   try {
-    const res = await fetch(`${BACKEND_URL}/login`, {
+    const res = await fetch('/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
@@ -27,7 +25,7 @@ document.getElementById('loginBtn')?.addEventListener('click', async () => {
     }
   } catch (err) {
     console.error('Login error:', err);
-    alert('Server error. Try again.');
+    alert('Server error. Try again later.');
   }
 });
 
