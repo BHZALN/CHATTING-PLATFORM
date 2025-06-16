@@ -15,7 +15,13 @@ app.use(express.json());
 
 app.post('/signup', (req, res) => {
   const { username, password } = req.body;
-  const users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+  let users = {};
+
+  try {
+    users = JSON.parse(fs.readFileSync(usersFile, 'utf8') || '{}');
+  } catch (err) {
+    console.error('Failed to read users.json', err);
+  }
 
   if (users[username]) {
     return res.json({ success: false, message: 'Username already exists' });
@@ -23,17 +29,17 @@ app.post('/signup', (req, res) => {
 
   users[username] = { password };
   fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
-  res.json({ success: true });
+  return res.json({ success: true });
 });
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+  const users = JSON.parse(fs.readFileSync(usersFile, 'utf8') || '{}');
 
   if (users[username] && users[username].password === password) {
-    res.json({ success: true });
+    return res.json({ success: true });
   } else {
-    res.json({ success: false, message: 'Invalid credentials' });
+    return res.json({ success: false, message: 'Invalid credentials' });
   }
 });
 
