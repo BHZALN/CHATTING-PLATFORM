@@ -1,3 +1,4 @@
+const cors = require('cors');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -7,6 +8,13 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
+
+// ✅ Enable CORS for your frontend domain
+app.use(cors({
+  origin: 'https://xischat-io-vuew.onrender.com',
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
 
 // Location of users.json
 const usersFile = path.join(__dirname, 'users.json');
@@ -63,7 +71,6 @@ app.post('/login', (req, res) => {
     return res.json({ success: false, message: 'Invalid credentials' });
   }
 });
-
 
 // --- SOCKET.IO CHAT ---
 io.on('connection', (socket) => {
