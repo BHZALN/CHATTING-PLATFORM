@@ -13,35 +13,58 @@ const usersFile = path.join(__dirname, 'users.json');
 app.use(express.static('public'));
 app.use(express.json());
 
-app.post('/signup', (req, res) => {
-  const { username, password } = req.body;
-  let users = {};
+document.getElementById('signupBtn')?.addEventListener('click', async () => {
+  const username = document.getElementById('signupUsername').value;
+  const password = document.getElementById('signupPassword').value;
 
   try {
-    users = JSON.parse(fs.readFileSync(usersFile, 'utf8') || '{}');
+    const res = await fetch('/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    if (!res.ok) throw new Error('Network error');
+
+    const data = await res.json();
+    if (data.success) {
+      alert('Signup successful! Please login.');
+      window.location.href = 'index.html';
+    } else {
+      alert(data.message || 'Signup failed');
+    }
   } catch (err) {
-    console.error('Failed to read users.json', err);
-  }
-
-  if (users[username]) {
-    return res.json({ success: false, message: 'Username already exists' });
-  }
-
-  users[username] = { password };
-  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
-  return res.json({ success: true });
-});
-
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  const users = JSON.parse(fs.readFileSync(usersFile, 'utf8') || '{}');
-
-  if (users[username] && users[username].password === password) {
-    return res.json({ success: true });
-  } else {
-    return res.json({ success: false, message: 'Invalid credentials' });
+    console.error(err);
+    alert('Server error or invalid response');
   }
 });
+
+document.getElementById('loginBtn')?.addEventListener('click', async () => {
+  const username = document.getElementById('loginUsername').value;
+  const password = document.getElementById('loginPassword').value;
+
+  try {
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    if (!res.ok) throw new Error('Network error');
+
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem('username', username);
+      window.location.href = 'chat.html';
+    } else {
+      alert(data.message || 'Login failed');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Server error or invalid response');
+  }
+});
+
 
 io.on('connection', socket => {
   socket.on('chat message', data => {
