@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>XIS CHAT - Login</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="login">
-  <div class="form-box">
-    <h2>Login to XIS CHAT</h2>
-    <input id="loginUsername" placeholder="Username" />
-    <input id="loginPassword" type="password" placeholder="Password" />
+<body>
+  <div class="container">
+    <h1>Welcome to XIS CHAT</h1>
+    <input type="text" id="loginUsername" placeholder="Username" />
+    <input type="password" id="loginPassword" placeholder="Password" />
     <button id="loginBtn">Login</button>
-    <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+    <p>Don't have an account? <a href="signup.html">Sign up</a></p>
   </div>
+
+  <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
-

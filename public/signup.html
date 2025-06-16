@@ -1,17 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>XIS CHAT - Sign Up</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="signup">
-  <div class="form-box">
-    <h2>Sign Up for XIS CHAT</h2>
-    <input id="signupUsername" placeholder="Username" />
-    <input id="signupPassword" type="password" placeholder="Password" />
+<body>
+  <div class="container">
+    <h1>Create your XIS CHAT account</h1>
+    <input type="text" id="signupUsername" placeholder="Username" />
+    <input type="password" id="signupPassword" placeholder="Password" />
     <button id="signupBtn">Sign Up</button>
     <p>Already have an account? <a href="index.html">Login</a></p>
   </div>
+
+  <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
+
