@@ -1,9 +1,9 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const app = express();
 const http = require('http');
 const { Server } = require('socket.io');
-const app = express();
 
 const server = http.createServer(app);
 const io = new Server(server);
@@ -13,66 +13,52 @@ const usersFile = path.join(__dirname, 'users.json');
 app.use(express.static('public'));
 app.use(express.json());
 
-document.getElementById('signupBtn')?.addEventListener('click', async () => {
-  const username = document.getElementById('signupUsername').value;
-  const password = document.getElementById('signupPassword').value;
+// SIGNUP route
+app.post('/signup', (req, res) => {
+  const { username, password } = req.body;
+  let users = {};
 
   try {
-    const res = await fetch('/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-
-    if (!res.ok) throw new Error('Network error');
-
-    const data = await res.json();
-    if (data.success) {
-      alert('Signup successful! Please login.');
-      window.location.href = 'index.html';
-    } else {
-      alert(data.message || 'Signup failed');
-    }
+    users = JSON.parse(fs.readFileSync(usersFile, 'utf8') || '{}');
   } catch (err) {
-    console.error(err);
-    alert('Server error or invalid response');
+    console.error('Error reading users file:', err);
+  }
+
+  if (users[username]) {
+    return res.json({ success: false, message: 'Username already exists' });
+  }
+
+  users[username] = { password };
+  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+  res.json({ success: true });
+});
+
+// LOGIN route
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  let users = {};
+
+  try {
+    users = JSON.parse(fs.readFileSync(usersFile, 'utf8') || '{}');
+  } catch (err) {
+    console.error('Error reading users file:', err);
+  }
+
+  if (users[username] && users[username].password === password) {
+    return res.json({ success: true });
+  } else {
+    return res.json({ success: false, message: 'Invalid credentials' });
   }
 });
 
-document.getElementById('loginBtn')?.addEventListener('click', async () => {
-  const username = document.getElementById('loginUsername').value;
-  const password = document.getElementById('loginPassword').value;
-
-  try {
-    const res = await fetch('/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-
-    if (!res.ok) throw new Error('Network error');
-
-    const data = await res.json();
-    if (data.success) {
-      localStorage.setItem('username', username);
-      window.location.href = 'chat.html';
-    } else {
-      alert(data.message || 'Login failed');
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Server error or invalid response');
-  }
-});
-
-
-io.on('connection', socket => {
-  socket.on('chat message', data => {
-    io.emit('chat message', data);
+// Chat socket
+io.on('connection', (socket) => {
+  socket.on('chat message', (msg) => {
+    io.emit('chat message', msg);
   });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
