@@ -1,87 +1,88 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // LOGIN BUTTON
-  const loginBtn = document.getElementById('loginBtn');
-  if (loginBtn) {
-    loginBtn.addEventListener('click', async () => {
-      const username = document.getElementById('loginUsername').value.trim();
-      const password = document.getElementById('loginPassword').value.trim();
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
 
-      if (!username || !password) return alert("Please enter username and password");
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
-      try {
-        const res = await fetch('/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
+// Location of users.json
+const usersFile = path.join(__dirname, 'users.json');
 
-        const data = await res.json();
+// Serve frontend files from public/
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
 
-        if (data.success) {
-          localStorage.setItem('username', username);
-          window.location.href = 'chat.html';
-        } else {
-          alert(data.message || 'Login failed');
-        }
-      } catch (err) {
-        console.error('Login error:', err);
-        alert('Server error. Try again later.');
-      }
-    });
+// --- SIGNUP ---
+app.post('/signup', (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password)
+    return res.status(400).json({ success: false, message: "Missing credentials" });
+
+  let users = {};
+  try {
+    if (fs.existsSync(usersFile)) {
+      users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+    }
+  } catch (err) {
+    console.error('Error reading users file:', err);
   }
 
-  // SIGNUP BUTTON
-  const signupBtn = document.getElementById('signupBtn');
-  if (signupBtn) {
-    signupBtn.addEventListener('click', async () => {
-      const username = document.getElementById('signupUsername').value.trim();
-      const password = document.getElementById('signupPassword').value.trim();
-
-      if (!username || !password) return alert("Please enter username and password");
-
-      try {
-        const res = await fetch('/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-          alert('Signup successful! Please login.');
-          window.location.href = 'index.html'; // or login.html if you rename it
-        } else {
-          alert(data.message || 'Signup failed');
-        }
-      } catch (err) {
-        console.error('Signup error:', err);
-        alert('Server error. Try again later.');
-      }
-    });
+  if (users[username]) {
+    return res.json({ success: false, message: 'Username already exists' });
   }
 
-  // CHAT SOCKET LOGIC (on chat.html only)
-  if (window.location.pathname.endsWith('chat.html')) {
-    const socket = io();
-    const form = document.getElementById('form');
-    const input = document.getElementById('input');
-    const messages = document.getElementById('messages');
-    const username = localStorage.getItem('username') || 'Anonymous';
+  users[username] = { password };
 
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (input.value.trim()) {
-        socket.emit('chat message', `${username}: ${input.value.trim()}`);
-        input.value = '';
-      }
-    });
-
-    socket.on('chat message', function (msg) {
-      const item = document.createElement('li');
-      item.textContent = msg;
-      messages.appendChild(item);
-      window.scrollTo(0, document.body.scrollHeight);
-    });
+  try {
+    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error writing users file:', err);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
+});
+
+// --- LOGIN ---
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password)
+    return res.status(400).json({ success: false, message: "Missing credentials" });
+
+  let users = {};
+  try {
+    if (fs.existsSync(usersFile)) {
+      users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+    }
+  } catch (err) {
+    console.error('Error reading users file:', err);
+  }
+
+  if (users[username] && users[username].password === password) {
+    res.json({ success: true });
+  } else {
+    res.json({ success: false, message: 'Invalid username or password' });
+  }
+});
+
+// --- SOCKET.IO CHAT ---
+io.on('connection', (socket) => {
+  console.log('A user connected');
+  socket.on('chat message', (msg) => {
+    io.emit('chat message', msg);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+  });
+});
+
+// --- RUN SERVER ---
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
