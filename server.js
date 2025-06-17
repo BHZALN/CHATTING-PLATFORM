@@ -7,29 +7,22 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
-// ✅ Enable CORS
-app.use(cors({
-  origin: 'https://xischat-io-vuew.onrender.com',
-  methods: ['GET', 'POST'],
-  credentials: true
-}));
-
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
-
-// Location of users.json
 const usersFile = path.join(__dirname, 'users.json');
 
-// Serve frontend files from public/
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // --- SIGNUP ---
 app.post('/signup', (req, res) => {
   const { username, password } = req.body;
-
   if (!username || !password)
     return res.status(400).json({ success: false, message: "Missing credentials" });
 
@@ -77,18 +70,17 @@ app.post('/login', (req, res) => {
 
 // --- SOCKET.IO CHAT ---
 io.on('connection', (socket) => {
-  console.log('A user connected');
+  console.log('✅ User connected');
   socket.on('chat message', (msg) => {
     io.emit('chat message', msg);
   });
-
   socket.on('disconnect', () => {
-    console.log('A user disconnected');
+    console.log('❌ User disconnected');
   });
 });
 
-// --- RUN SERVER ---
+// --- START SERVER ---
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`🚀 Server live at http://localhost:${PORT}`);
 });

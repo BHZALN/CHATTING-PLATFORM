@@ -1,4 +1,4 @@
-const BACKEND_URL = 'https://chatting-platformee.onrender.com'; // ✅ FIXED
+const BACKEND_URL = 'https://chatting-platformee.onrender.com'; // Replace with your backend URL
 
 // ===== LOGIN =====
 document.getElementById('loginBtn')?.addEventListener('click', async () => {
@@ -10,7 +10,6 @@ document.getElementById('loginBtn')?.addEventListener('click', async () => {
   try {
     const res = await fetch(`${BACKEND_URL}/login`, {
       method: 'POST',
-      mode: 'cors', // ✅ Added for CORS
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
@@ -41,7 +40,6 @@ document.getElementById('signupBtn')?.addEventListener('click', async () => {
   try {
     const res = await fetch(`${BACKEND_URL}/signup`, {
       method: 'POST',
-      mode: 'cors', // ✅ Added for CORS
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
@@ -62,7 +60,7 @@ document.getElementById('signupBtn')?.addEventListener('click', async () => {
 
 // ===== CHAT PAGE SOCKET.IO =====
 if (window.location.pathname.endsWith('chat.html')) {
-  const socket = io(BACKEND_URL); // connect to backend socket
+  const socket = io(BACKEND_URL);
 
   const form = document.getElementById('form');
   const input = document.getElementById('input');
