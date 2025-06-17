@@ -10,12 +10,12 @@ document.getElementById('loginBtn')?.addEventListener('click', async () => {
   try {
     const res = await fetch(`${BACKEND_URL}/login`, {
       method: 'POST',
+      mode: 'cors', // ✅ Added for CORS
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
 
-    const text = await res.text();
-    const data = JSON.parse(text || '{}');
+    const data = await res.json();
 
     if (data.success) {
       localStorage.setItem('username', username);
@@ -41,12 +41,12 @@ document.getElementById('signupBtn')?.addEventListener('click', async () => {
   try {
     const res = await fetch(`${BACKEND_URL}/signup`, {
       method: 'POST',
+      mode: 'cors', // ✅ Added for CORS
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
 
-    const text = await res.text();
-    const data = JSON.parse(text || '{}');
+    const data = await res.json();
 
     if (data.success) {
       alert('Signup successful. Please login.');
